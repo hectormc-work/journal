@@ -1,0 +1,21 @@
+{
+  "name": "journal",
+  "private": true,
+  "packageManager": "yarn@4.17.1",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "typecheck": "yarn workspaces foreach -A run typecheck",
+    "build": "yarn workspace @journal/client build"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
