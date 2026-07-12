@@ -1,6 +1,7 @@
 {
   "name": "journal",
   "private": true,
+  "type": "module",
   "packageManager": "yarn@4.17.1",
   "workspaces": [
     "packages/*"
@@ -9,13 +10,33 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "node scripts/dev.mjs",
+    "dev": "tsx scripts/dev.ts",
+    "kill": "tsx scripts/kill-ports.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "typecheck": "yarn workspaces foreach -A run typecheck",
-    "build": "yarn workspace @journal/client build"
+    "db:new": "tsx scripts/db-new.ts",
+    "db:upgrade": "tsx scripts/db-upgrade.ts",
+    "typecheck": "yarn workspaces foreach -A run typecheck && tsc --noEmit",
+    "build": "yarn workspace @journal/client build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@journal/db": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^6.0.3"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.7.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.9.2",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.5",
+    "tsx": "^4.22.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.64.0",
+    "vue-eslint-parser": "^10.4.1"
   }
 }

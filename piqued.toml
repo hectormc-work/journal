@@ -1,0 +1,9 @@
+[postgres]
+uri = "postgres://journal:journal@localhost:5432/journal"
+
+[workspace]
+root = "./packages/db/src"
+
+[emit]
+moduleType = "ESM"
+tableFile = "tables.ts"

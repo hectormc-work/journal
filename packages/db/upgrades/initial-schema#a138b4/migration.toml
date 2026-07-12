@@ -1,0 +1,3 @@
+version = "initial-schema#a138b4"
+isolatedTx = false
+parents = [ "root#000000" ]
