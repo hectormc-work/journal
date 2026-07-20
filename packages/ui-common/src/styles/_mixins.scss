@@ -1,0 +1,8 @@
+// Emits one --color-<key> custom property per entry in a palette map
+// (see _palette.scss) so the same list drives every theme block instead
+// of being retyped per selector.
+@mixin emit-palette($palette) {
+  @each $name, $value in $palette {
+    --color-#{$name}: #{$value};
+  }
+}

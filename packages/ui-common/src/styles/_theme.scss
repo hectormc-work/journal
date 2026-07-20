@@ -1,0 +1,36 @@
+@use "palette" as p;
+@use "mixins" as m;
+@use "typography" as t;
+@use "layout" as l;
+
+// Color follows the viewer's system preference by default, and can be
+// pinned either way via data-theme (set by the app's theme toggle,
+// persisted to localStorage). data-theme must win over the media query
+// in both directions, so it's declared after it.
+:root {
+  @include m.emit-palette(p.$light);
+  color-scheme: light;
+
+  --font-serif: #{t.$font-serif};
+  --font-sans: #{t.$font-sans};
+
+  --radius-sm: #{l.$radius-sm};
+  --radius-md: #{l.$radius-md};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    @include m.emit-palette(p.$dark);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  @include m.emit-palette(p.$dark);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  @include m.emit-palette(p.$light);
+  color-scheme: light;
+}

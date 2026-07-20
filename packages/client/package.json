@@ -12,12 +12,14 @@
     "@journal/common": "workspace:*",
     "@journal/ui-common": "workspace:*",
     "hono": "^4.12.23",
+    "lucide-vue-next": "^1.0.0",
     "vue": "^3.5.34",
     "vue-router": "^5.0.7"
   },
   "devDependencies": {
     "@journal/server": "workspace:*",
     "@vitejs/plugin-vue": "^6.0.7",
+    "sass": "1.100.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.14",
     "vue-tsc": "^3.3.1"

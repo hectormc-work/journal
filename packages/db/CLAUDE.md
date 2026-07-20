@@ -145,7 +145,7 @@ tableFile / simple `.sql` files) for anything ordinary — most of the app; hand
 -written, more deliberate `.sql` (using the pragma syntax above) for the
 minority of queries being actively optimized (complex joins/aggregates).
 
-## Runtime pattern (`src/client.ts`)
+## Runtime pattern (`src/client.ts`, exported via `src/index.ts`)
 
 - `pg.Pool`, configured from `settings.db.*` (`@journal/common/node`).
 - `buildColumnOrderCache(tables, pool)` once at module load, against the
@@ -155,3 +155,72 @@ minority of queries being actively optimized (complex joins/aggregates).
   at the call site (explicit resource management auto-disposes it) — not the
   `withSmartClient(fn)` callback form, which prior work rarely used.
 - `upgrade(version?, { allowDowngrade? })` — see Migrations above.
+- `src/index.ts` is the package's actual public entry (`"exports": "./src/index.ts"`)
+  — re-exports `smartClient`/`upgrade` from `client.ts`, the per-table
+  `TableBuilder`s from `tables.ts` (`EntryTable`, `PromptTable`, etc. — not
+  `PiquedHeadTable`, that's piqued's own internal migration-tracking table),
+  and the query-builder primitives below, re-exported from `@piqued/client` so
+  `packages/server` only ever needs to depend on `@journal/db`, never reach
+  past it to `@piqued/client` directly.
+
+## Query-builder syntax (`Select`/`Insert`/`Update`/`Delete`/`Op`)
+
+For ordinary CRUD (no hand-written `.sql` query file needed) — build queries
+directly against a table's generated `TableBuilder`. **Always requires an
+explicit `SmartClient`** passed to `.one()`/`.opt()`/`.many()`/`.execute()` —
+unlike generated per-query-file wrappers (from `.sql` files bound to a pool via
+a factory, prior work's pattern — not used yet in this repo), the raw
+query-builder has no implicit pool fallback.
+
+```ts
+import {
+  Delete,
+  EntryTable,
+  Insert,
+  Op,
+  Select,
+  smartClient,
+  Update,
+} from "@journal/db";
+
+// SELECT — TableBuilder.star spreads every column; TableBuilder.c.<col> for one column
+using client = await smartClient();
+
+const allEntries = await Select(...EntryTable.star)
+  .from(EntryTable)
+  .orderBy(EntryTable.c.created_at, "desc")
+  .many(client);
+
+const oneEntry = await Select(...EntryTable.star)
+  .from(EntryTable)
+  .where(Op.eq(EntryTable.c.id, id))
+  .opt(client); // opt() = zero-or-one; one() throws if missing; many() = array
+
+// INSERT — .values() takes a plain object; .returning(...cols) shapes the result
+const created = await Insert(EntryTable)
+  .values({ entry_date: date, body })
+  .returning(...EntryTable.star)
+  .one(client);
+
+// UPDATE — .set() + .where(); .whereEq({...}) is a shorthand for equality-only conditions
+const updated = await Update(EntryTable)
+  .set({ body })
+  .where(Op.eq(EntryTable.c.id, id))
+  .returning(...EntryTable.star)
+  .one(client);
+
+// DELETE
+await Delete(EntryTable).where(Op.eq(EntryTable.c.id, id)).execute(client);
+```
+
+`Op` covers `eq`/`lt`/`lte`/`gt`/`gte`/`is`/`isNot`/`in_`/`not`/`and`/`or`/
+`isNull`/`isNotNull`/`coalesce`/`count`/`min`/`max`/`arrayAgg`/`concat` — no
+`between`, compose range checks with `Op.and(Op.gte(...), Op.lt(...))`.
+Multiple chained `.where(...)` calls on a `Select` AND together, same as one
+`Op.and(...)`.
+
+## Server-side consumption pattern
+
+`packages/server` is the only consumer — see `packages/server/CLAUDE.md` for
+the routes-vs-data-access layout and the Hono type-inference gotchas hit while
+wiring entries CRUD through it.
