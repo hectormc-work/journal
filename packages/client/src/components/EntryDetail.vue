@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Entry } from "../api";
 import EntryBodyEditor from "./EntryBodyEditor.vue";
-import QuestionsPanel from "./QuestionsPanel.vue";
+import PromptsPanel from "./PromptsPanel.vue";
 
 const entry = defineModel<Entry>({ required: true });
 
@@ -19,7 +19,7 @@ const emit = defineEmits<{
       @deleted="emit('deleted')"
       @error="(message) => emit('error', message)"
     />
-    <QuestionsPanel class="pane" />
+    <PromptsPanel :entry-id="entry.id" class="pane" />
   </div>
 </template>
 

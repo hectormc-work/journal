@@ -1,12 +1,20 @@
 <script setup lang="ts">
-// Attrs (including click listeners) fall through to the native button.
-withDefaults(defineProps<{ variant?: "default" | "accent" | "danger" }>(), {
-  variant: "default",
-});
+// Attrs (including click listeners, or href/download for the `a` variant)
+// fall through to whichever root element is actually rendered.
+withDefaults(
+  defineProps<{
+    variant?: "default" | "accent" | "danger";
+    // Bootstrap's .btn applies to both <button> and <a> -- same here, for
+    // cases like a download link that needs to look like a button.
+    as?: "button" | "a";
+  }>(),
+  { variant: "default", as: "button" },
+);
 </script>
 
 <template>
-  <button class="button" :class="variant" type="button">
+  <a v-if="as === 'a'" class="button" :class="variant"><slot /></a>
+  <button v-else class="button" :class="variant" type="button">
     <slot />
   </button>
 </template>
