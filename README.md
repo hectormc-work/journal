@@ -4,7 +4,12 @@ Personal journaling app — voice recordings, free-form entries, and question pr
 
 ## Setup
 
+**macOS:**
+
 ```sh
+# Homebrew -- skip if you already have it
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
 brew install volta && volta setup   # then open a new terminal
 brew install --cask docker          # then launch it once from Applications
 
@@ -15,6 +20,30 @@ yarn setup
 yarn dev                            # server :3000, client :5173 (proxies /api)
 ```
 
+**Linux:**
+
+```sh
+curl https://get.volta.sh | bash    # then open a new terminal
+
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker "$USER"     # then log out/in; RPM distros also need: sudo systemctl enable --now docker
+
+curl https://raw.githubusercontent.com/zwade/piqued/refs/heads/master/rust/piqued/scripts/install.sh | bash
+
+yarn install
+yarn setup
+yarn dev
+```
+
+**Windows:** piqued has no native Windows build (its installer needs `uname`/`arch`,
+Unix-only) — use WSL (make Windows understand Linux) and follow the Linux block above inside it. Docker Desktop's
+Windows install can still run outside WSL if you want:
+
+```powershell
+winget install Volta.Volta
+winget install Docker.DockerDesktop   # then launch it once from the Start menu
+```
+
 _Asides, for when something doesn't work:_
 
 - **Volta** — pins Node + Yarn from the `volta` field in `package.json`
@@ -23,7 +52,9 @@ _Asides, for when something doesn't work:_
   If `node --version` doesn't match: something else (old Homebrew `node`,
   leftover nvm) is winning your `PATH` — check `which node`.
 - **Docker** — `docker info` has to succeed before `yarn setup` will work.
-  Installed ≠ running; Docker Desktop needs to actually be launched once.
+  Installed ≠ running; Docker Desktop (or the Linux daemon) needs to actually
+  be started once, and on Linux your user needs to be in the `docker` group
+  (see above) or every `docker` command needs `sudo`.
 - **piqued** — pinned upstream at **0.7.12**. Writes to `/usr/local/bin`,
   asks for your `sudo` password interactively — can't be scripted, has to be
   run by hand, in a real terminal.
