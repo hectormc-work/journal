@@ -1,12 +1,13 @@
 // Hand-rolled dev runner: spawns server + client, prefixes output, dies together.
-import { spawn } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
+import type { Readable } from "node:stream";
 
 const workspaces = ["@journal/server", "@journal/client"];
 
 let shuttingDown = false;
-const procs = [];
+const procs: ChildProcess[] = [];
 
-const shutdown = (code) => {
+const shutdown = (code: number) => {
   if (shuttingDown) return;
   shuttingDown = true;
   for (const p of procs) p.kill("SIGINT");
@@ -19,7 +20,7 @@ for (const ws of workspaces) {
     stdio: ["ignore", "pipe", "pipe"],
   });
 
-  const prefix = (stream, out) => {
+  const prefix = (stream: Readable, out: NodeJS.WritableStream) => {
     let buf = "";
     stream.on("data", (chunk) => {
       buf += chunk;
@@ -28,8 +29,8 @@ for (const ws of workspaces) {
       for (const line of lines) out.write(`[${name}] ${line}\n`);
     });
   };
-  prefix(p.stdout, process.stdout);
-  prefix(p.stderr, process.stderr);
+  prefix(p.stdout!, process.stdout);
+  prefix(p.stderr!, process.stderr);
 
   p.on("exit", (code) => shutdown(code ?? 0));
   procs.push(p);

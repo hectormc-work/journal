@@ -1,23 +1,23 @@
 {
-  "name": "@journal/server",
+  "name": "@journal/db",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/app.ts"
+    ".": "./src/client.ts"
   },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hono/node-server": "^2.0.4",
     "@journal/common": "workspace:*",
-    "hono": "^4.12.23"
+    "@piqued/client": "^0.8.1",
+    "pg": "^8.22.0",
+    "pg-cursor": "^2.21.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "tsx": "^4.22.1",
+    "@types/pg": "^8.20.0",
     "typescript": "^6.0.3"
   }
 }

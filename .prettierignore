@@ -1,0 +1,9 @@
+node_modules
+dist
+.yarn
+yarn.lock
+
+# piqued-generated — reformatting is pointless, codegen overwrites it anyway
+packages/db/src/postgres.ts
+packages/db/src/tables.ts
+packages/db/src/queries/**/*.ts
