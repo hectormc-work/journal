@@ -39,5 +39,15 @@ export default tseslint.config(
       globals: globals.node,
     },
   },
+  {
+    // ui-common's public components are a Bootstrap-style primitive kit
+    // (Button, Alert, Sidebar, ...) — single-word names are the point,
+    // and these are locally-imported SFCs, not global custom elements,
+    // so there's no native-tag collision risk to guard against.
+    files: ["packages/ui-common/src/components/**/*.vue"],
+    rules: {
+      "vue/multi-word-component-names": "off",
+    },
+  },
   eslintConfigPrettier,
 );

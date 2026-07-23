@@ -1,0 +1,41 @@
+// A reading nook at night: foxed parchment and iron-gall ink by day,
+// a lamp-lit room by night. Brass for anything actionable, a
+// banker's-lamp green held in reserve, oxblood for anything destructive.
+
+$light: (
+  "bg": #ede1c4,
+  "surface": #f7f0dd,
+  "surface-raised": #fffbf1,
+  "border": #c7b384,
+  "border-soft": #ddcda1,
+  "text": #2b2013,
+  "text-muted": #7d6b48,
+  "accent": #96661d,
+  "accent-strong": #7a5417,
+  "accent-hover": #ac7826,
+  "accent-ink": #2b2013,
+  "secondary": #3f6650,
+  "secondary-hover": #517d63,
+  "danger": #8c3a2f,
+  "danger-hover": #a3473b,
+  "danger-ink": #fbf3e0,
+);
+
+$dark: (
+  "bg": #1b1714,
+  "surface": #241e19,
+  "surface-raised": #2c241e,
+  "border": #4a3c30,
+  "border-soft": #382e26,
+  "text": #ecdfc0,
+  "text-muted": #a08d6c,
+  "accent": #d3a441,
+  "accent-strong": #e6ba5c,
+  "accent-hover": #e6ba5c,
+  "accent-ink": #241a0c,
+  "secondary": #5c9078,
+  "secondary-hover": #74a68d,
+  "danger": #c1594c,
+  "danger-hover": #d16f61,
+  "danger-ink": #251411,
+);

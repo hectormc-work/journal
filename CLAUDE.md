@@ -16,8 +16,8 @@ Journal — a personal journaling app for Anahí and a few friends. Voice record
 - `packages/common` — shared zod schemas/types (zod 4); no internal deps. Two entry points: `.` (`src/index.ts`, browser-safe) and `./node` (`src/node.ts`, node-only — currently just `settings`). See Config below for why the split exists
 - `packages/db` — @journal/db, piqued connection + query layer; depends on common (imports `settings` via `@journal/common/node`). Full piqued reference (config, migration mechanics, gotchas) lives in `packages/db/CLAUDE.md` — read it before touching migrations or query files
 - `packages/ui-common` — shared Vue components; depends on common (`.` entry only)
-- `packages/server` — Hono on Node (`@hono/node-server`), exports `AppType` from `src/app.ts` for typed RPC; depends on common (imports `settings` via `@journal/common/node`), db
-- `packages/client` — Vite 8 + Vue 3.5 (Composition API, `<script setup lang="ts">`), vue-router 5, `hc<AppType>` client in `src/api.ts`
+- `packages/server` — Hono on Node (`@hono/node-server`), exports `AppType` from `src/app.ts` for typed RPC; depends on common (imports `settings` via `@journal/common/node`), db. Conventions + Hono type-inference gotchas: `packages/server/CLAUDE.md`
+- `packages/client` — Vite 8 + Vue 3.5 (Composition API, `<script setup lang="ts">`), vue-router 5, `hc<AppType>` client wrapped by `src/api.ts`. Conventions (component-per-file, the `api.ts` pattern): `packages/client/CLAUDE.md`
 - Internal packages export TS source directly (no build step; Vite/tsx consume it raw). Usually a single `"exports": "./src/index.ts"` — `common` is the one exception, with two entries (see above)
 - Postgres 17 (Docker), piqued (Rust binary pinned 0.7.12, `@piqued/client` npm) for typed SQL, lives in `packages/db`. Migrations are piqued's own DAG-based upgrade system (`PiquedUpgradeControl`, `packages/db/upgrades/`), not a hand-rolled runner. `piqued.toml` (codegen config) lives at the **repo root**, not inside `packages/db`
 - TypeScript ^6.0 everywhere; if vue-tsc throws compiler-internal errors in .vue files, suspect the TS 6 pairing (rollback path in README)
@@ -25,7 +25,7 @@ Journal — a personal journaling app for Anahí and a few friends. Voice record
 ## Conventions
 
 - Routes stay chained off one Hono expression in `server/src/app.ts` — `AppType` inference depends on it
-- Validation with zod schemas defined in `common`, applied server-side via `@hono/zod-validator`
+- Validation schemas (zod) live server-side, colocated with the domain logic that uses them (e.g. `packages/server/src/db/entries.ts`), applied via `@hono/zod-validator` — **not** in `common`. Same for output types: no hand-duplicated `Entry`-style type in `common` either; both ends get the wire shape via structural inference (piqued server-side, `hono/client`'s `InferResponseType` client-side). See `packages/server/CLAUDE.md` / `packages/client/CLAUDE.md`
 - Each workspace declares every dep it uses (including typescript) — no relying on hoisting for peer resolution
 - Git: Graphite (`gt`) stacked-PR workflow — create branches with `gt create`, not raw `git checkout -b`
 - Commands: `yarn dev` (both servers), `yarn typecheck` (all workspaces), `yarn lint`/`lint:fix`, `yarn format`/`format:check`, `yarn db:up`/`db:down`, `yarn build`
@@ -35,6 +35,7 @@ Journal — a personal journaling app for Anahí and a few friends. Voice record
 ## Status (update as phases complete)
 
 - Phase 1 (scaffold) done: workspaces, typed RPC round-trip, Docker Postgres, dev runner, ESLint + Prettier
-- Phase 2 (DB core) done: `packages/db` scaffolded and verified end-to-end — schema live, migrations applied, piqued codegen run, `SmartClient` query tested against the real DB. Not yet done: `packages/server` doesn't consume `@journal/db` yet (no DB-backed routes), no query `.sql` files written yet (that's Phase 3/4's actual CRUD)
-- Data model: `prompt_group` / `prompt` (a prompt belongs to exactly one group — no standalone prompts) / `entry` (`body` is the always-present main journaling text) / `recording` (attaches directly via `entry_id`) / `prompt_response` (`entry_id` + a frozen `prompt_text` snapshot + nullable `response` — no `prompt_id` FK) — see PLAN.md's Data model section for the full picture and rationale
+- Phase 2 (DB core) done: `packages/db` scaffolded and verified end-to-end — schema live, migrations applied, piqued codegen run, `SmartClient` query tested against the real DB
+- Phase 3 (Journal core) done: entries CRUD (`packages/server/src/db/entries.ts` + `app.ts` routes) wired end-to-end to a master-detail client UI (sidebar + 50/50 split, see PLAN.md's Client UI section and `packages/client/CLAUDE.md`). No query `.sql` files written yet — entries CRUD is simple enough for piqued's query-builder directly (see `packages/db/CLAUDE.md`'s "two ways to query")
+- Data model: `prompt_group` / `prompt` (a prompt belongs to exactly one group — no standalone prompts) / `entry` (`name` NOT NULL — defaults to the formatted date if not given; `body` is the always-present main journaling text) / `recording` (attaches directly via `entry_id`) / `prompt_response` (`entry_id` + a frozen `prompt_text` snapshot + nullable `response` — no `prompt_id` FK) — see PLAN.md's Data model section for the full picture and rationale
 - Resolved: no unique-entry-per-day constraint (entries just carry a date label); no polymorphic entry-item table (replaced by `entry.body` + `recording.entry_id` + `prompt_response`, see PLAN.md Decisions log); `prompt_response` snapshots the prompt's wording rather than referencing it, so editing/deleting a `prompt` never touches past responses; local-only, no auth/sessions/invites — see PLAN.md

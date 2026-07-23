@@ -77,6 +77,8 @@ export namespace Entry {
         /** The main journaling text for this day, independent of any attached prompts. An entry with zero attached prompts is still fully journal-able via this field alone. */
         "body": string | null;
         "created_at": Date;
+        /** Short label for the entry, editable independently of body. Always set by the application -- defaults to a formatted date when not explicitly provided at creation. */
+        "name": string;
     };
     
     export const spec = {
@@ -86,6 +88,7 @@ export namespace Entry {
             ["entry_date", Date],
             ["body", String],
             ["created_at", Date],
+            ["name", String],
         ] as const,
     };
 }

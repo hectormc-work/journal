@@ -1,3 +1,11 @@
+// pg's `date` (de)serialization uses the Node process's *local* time (both
+// directions -- see packages/db/CLAUDE.md's Date/time section for the
+// specifics), not UTC. Forcing the process to run in UTC makes "local" and
+// "UTC" the same thing, so treating every DB date as UTC (Luxon, elsewhere in
+// this codebase) is actually correct instead of a locale-dependent bug. Must
+// be set before anything touches a Date.
+process.env.TZ = "UTC";
+
 import { settings } from "@journal/common/node";
 import {
   buildColumnOrderCache,

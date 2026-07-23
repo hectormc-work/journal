@@ -55,12 +55,12 @@ packages/db/
 prompt_group      id, name, description
 prompt            id, group_id, position, text, archived, created_at
 
-entry             id, entry_date (date), body, created_at
+entry             id, entry_date (date), name, body, created_at
 recording         id, entry_id, path, mime_type, duration_ms, size_bytes, created_at
 prompt_response   id, entry_id, prompt_text, response, created_at
 ```
 
-Every `prompt` belongs to exactly one `prompt_group` — there are no standalone prompts, and entries only ever gain prompts by adding a whole group (never picking one individually). Adding a group to an entry creates one `prompt_response` row per prompt in that group, **snapshotting the prompt's wording into `prompt_text`** rather than storing a `prompt_id` FK — `response = NULL` until answered, then filled in independently and asynchronously. Snapshotting (not referencing) means editing a prompt's wording later never changes past responses, and a `prompt` can always be deleted regardless of how many responses exist — there's no FK for it to violate. `entry.body` is the main journaling text, independent of any attached prompts — an entry with zero prompts attached is still fully journal-able via `body` alone. `recording` attaches directly to an entry via `entry_id` — no item-wrapper table; there's currently no path for an audio _response_ to a specific prompt (would need a future schema change if ever wanted). Single-user per install, so nothing is owner-scoped (no `users`/`sessions`/`invites`). `entry_date` is a label, not a constraint — a day can have zero, one, or several entries.
+Every `prompt` belongs to exactly one `prompt_group` — there are no standalone prompts, and entries only ever gain prompts by adding a whole group (never picking one individually). Adding a group to an entry creates one `prompt_response` row per prompt in that group, **snapshotting the prompt's wording into `prompt_text`** rather than storing a `prompt_id` FK — `response = NULL` until answered, then filled in independently and asynchronously. Snapshotting (not referencing) means editing a prompt's wording later never changes past responses, and a `prompt` can always be deleted regardless of how many responses exist — there's no FK for it to violate. `entry.name` is NOT NULL — the app always supplies one, defaulting to the formatted date (e.g. "July 19, 2026") when the user doesn't set one explicitly at creation; editable afterward like `body`. `entry.body` is the main journaling text, independent of any attached prompts — an entry with zero prompts attached is still fully journal-able via `body` alone. `recording` attaches directly to an entry via `entry_id` — no item-wrapper table; there's currently no path for an audio _response_ to a specific prompt (would need a future schema change if ever wanted). Single-user per install, so nothing is owner-scoped (no `users`/`sessions`/`invites`). `entry_date` is a label, not a constraint — a day can have zero, one, or several entries.
 
 **Date/time typing** — pick deliberately per column:
 
@@ -69,7 +69,7 @@ Every `prompt` belongs to exactly one `prompt_group` — there are no standalone
 
 ## API surface (all under /api, zod-validated)
 
-- `entries`: GET by date / list by month; POST create for date; PATCH `body`; POST add a prompt group (creates its `prompt_response` rows); DELETE
+- `entries`: GET all (ordered by `created_at`, no date/month filtering — the client shows a flat, chronological sidebar over the full list, no grouping); POST create for a date (`name` optional, defaults to the formatted date); PUT full replace of `entry_date` + `name` + `body`; POST add a prompt group (creates its `prompt_response` rows); DELETE
 - `prompt-responses`: PATCH `response` by `id`
 - `prompts`: CRUD; `prompt-groups`: CRUD + membership
 - `recordings`: POST upload (multipart, attaches directly to an entry), GET stream (Range support), DELETE
@@ -80,12 +80,16 @@ Client consumes `hono/client` with the server's exported `AppType` — end-to-en
 
 Browser `MediaRecorder` (webm/opus) → multipart upload → server writes file via `Storage` interface, inserts a `recording` row with `entry_id` set directly. Playback via `<audio>` against a streaming endpoint (manual Range-request handler, ~30 lines).
 
+## Client UI
+
+Master-detail, not the originally-planned calendar/date-picker: sidebar lists all entries (flat, `created_at` order) with a "+ New entry" button; selecting one splits the remaining space 50/50 — entry body left, a `QuestionsPanel` placeholder right (reserved for Phase 4). Details (component breakdown, `api.ts` pattern) live in `packages/client/CLAUDE.md`; server-side Hono conventions live in `packages/server/CLAUDE.md`.
+
 ## Phases
 
 1. **Scaffold** (done) — workspaces, tsconfigs, ESLint/Prettier, Docker Compose Postgres, hello-world Hono + Vite/Vue, typed RPC proven end-to-end.
-2. **DB core** — scaffold `packages/db` (client.ts, queries/, upgrades/), initial schema via piqued upgrades. (`settings` in `packages/common` already landed ahead of this phase.)
-3. **Journal core** — day entries, free-text items, day navigation, edit/reorder/delete.
-4. **Questions** — question bank CRUD, preset groups, "add question/group to today" flow.
+2. **DB core** (done) — `packages/db` scaffolded, initial schema via piqued upgrades, verified end-to-end. (`settings` in `packages/common` landed ahead of this phase.)
+3. **Journal core** (done) — entries CRUD (create/list/rename/move date/edit body/delete), master-detail UI (see Client UI above). "Free-text items"/calendar-navigation from the original plan didn't survive the schema simplification — superseded by `entry.body` + the sidebar list.
+4. **Questions** — question bank CRUD, preset groups, "add group to entry" flow (fills in the `QuestionsPanel` placeholder).
 5. **Voice** — record/upload/playback, recording UI in ui-common.
 6. **Polish** — error handling, packaging/docs so a friend can clone and run it locally.
 
@@ -93,6 +97,8 @@ Browser `MediaRecorder` (webm/opus) → multipart upload → server writes file 
 
 - Timezone: client sends its local date (see Date/time typing above).
 - Past entries are freely editable.
+- No hand-duplicated request/response types in `common` — validation schemas (zod) live server-side, colocated with the domain logic that uses them; output shapes come from structural inference on both ends (piqued's generated types server-side, `hono/client`'s `InferResponseType` client-side). `common` stays empty until something is genuinely shared hand-written code (constants, enums), not just physically reachable from both sides. See `packages/server/CLAUDE.md` / `packages/client/CLAUDE.md`.
+- Entries: full-replace PUT (not partial PATCH) for edits — one call always sends `entry_date` + `name` + `body` together, no per-field optionality to track. "New entry" defaults to today; `entry.name` defaults to the formatted date when not given explicitly.
 - Schema simplified from an earlier polymorphic `entry_item` (`kind: 'text' | 'audio' | 'question'` + CHECK constraints) to three flat, purpose-specific relationships: `entry.body` (main journaling), `recording.entry_id` (direct attach), `prompt_response` (entry + a frozen prompt snapshot, nullable `response`). Renamed `question`/`question_group` → `prompt`/`prompt_group` to match. A prompt belongs to exactly one group (no standalone prompts, no many-to-many); entries only ever gain prompts by adding a whole group at once.
 - Snapshot, not reference: `prompt_response` stores `prompt_text` (copied at attach-time) instead of a `prompt_id` FK. Editing a prompt's wording later doesn't retroactively change past responses, and a `prompt` can always be deleted — nothing FK-references it, so there's no "can't delete, it's in use" case to design around.
 - Audio _responses_ to individual prompts: not supported by the current schema at all (no `recording_id` on `prompt_response`) — would need a future migration if ever wanted. Standalone audio (`recording` attached directly to an entry) is still planned for Phase 5.

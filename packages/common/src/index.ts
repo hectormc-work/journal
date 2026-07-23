@@ -1,10 +1,7 @@
-import { z } from "zod";
-
-// First shared schema — proves the common → server → client type chain.
-// Real journal schemas (entries, questions, etc.) land here in Phase 2.
-export const healthSchema = z.object({
-  status: z.literal("ok"),
-  time: z.string(),
-});
-
-export type Health = z.infer<typeof healthSchema>;
+// Intentionally empty for now. Validation schemas belong to the server (only
+// it validates untrusted input — @hono/zod-validator, colocated with the
+// route that uses them); output shapes come for free via structural
+// inference (server) and hono/client's InferResponseType (client) off the
+// AppType chain. This package is for things genuinely shared as hand-written
+// code — constants, enums, etc. — once something actually needs that.
+export {};

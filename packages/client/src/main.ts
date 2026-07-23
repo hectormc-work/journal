@@ -1,3 +1,5 @@
+import "@journal/ui-common/styles";
+
 import { createApp } from "vue";
 
 import App from "./App.vue";
