@@ -26,7 +26,7 @@ packages/
   client/       @journal/client    — Vite + Vue app (depends: common, ui-common, server for AppType)
 ```
 
-Root: `package.json` (workspaces, `packageManager: yarn@4.x`), `.yarnrc.yml`, `tsconfig.base.json` (project references), ESLint + Prettier, `docker-compose.yml` (Postgres), `.nvmrc`. Everything is project-scoped (Yarn via Corepack, Postgres in Docker); the one exception is the piqued binary (Rust, its own install script) — pin the version in the README and only invoke it through yarn scripts.
+Root: `package.json` (workspaces, `packageManager: yarn@4.x`, `volta.node` pin), `.yarnrc.yml`, `tsconfig.base.json` (project references), ESLint + Prettier, `docker-compose.yml` (Postgres). Everything is project-scoped (Node via Volta, Yarn via Corepack, Postgres in Docker); the one exception is the piqued binary (Rust, its own install script) — pin the version in the README and only invoke it through yarn scripts.
 
 **Why `common` has two entry points:** importing anything from a module runs that module's entire top-level code, not just the binding you asked for. `common`'s default entry (`.`) is a single barrel (`src/index.ts`) that the browser bundle (client) also imports from — so anything with an eager, `process`/fs-touching top-level side effect in that file's module graph breaks the client build, even if the client never actually uses that export. (This is exactly how `settings` broke `yarn dev` with `process is not defined` the first time — it was re-exported from the shared barrel.) The fix: node-only code lives behind a separate `./node` entry (`src/node.ts`) that only `server`/`db` ever import; client/ui-common never do, so it's never reachable from their bundle.
 
