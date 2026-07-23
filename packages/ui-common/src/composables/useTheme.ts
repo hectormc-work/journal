@@ -14,7 +14,9 @@ function readStoredTheme(): Theme | null {
 }
 
 // Module-level singleton: one theme for the whole app, no provide/inject needed.
-const theme = ref<Theme>(readStoredTheme() ?? (systemPrefersDark() ? "dark" : "light"));
+const theme = ref<Theme>(
+  readStoredTheme() ?? (systemPrefersDark() ? "dark" : "light"),
+);
 
 watchEffect(() => {
   document.documentElement.setAttribute("data-theme", theme.value);

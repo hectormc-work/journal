@@ -82,14 +82,14 @@ Browser `MediaRecorder` (webm/opus) → multipart upload → server writes file 
 
 ## Client UI
 
-Master-detail, not the originally-planned calendar/date-picker: sidebar lists all entries (flat, `created_at` order) with a "+ New entry" button; selecting one splits the remaining space 50/50 — entry body left, a `QuestionsPanel` placeholder right (reserved for Phase 4). Details (component breakdown, `api.ts` pattern) live in `packages/client/CLAUDE.md`; server-side Hono conventions live in `packages/server/CLAUDE.md`.
+Master-detail, not the originally-planned calendar/date-picker: sidebar lists all entries (flat, `created_at` order) with a "+ New entry" button; selecting one splits the remaining space 50/50 — entry body left, a `PromptsPanel` placeholder right (reserved for Phase 4). Details (component breakdown, `api.ts` pattern) live in `packages/client/CLAUDE.md`; server-side Hono conventions live in `packages/server/CLAUDE.md`.
 
 ## Phases
 
 1. **Scaffold** (done) — workspaces, tsconfigs, ESLint/Prettier, Docker Compose Postgres, hello-world Hono + Vite/Vue, typed RPC proven end-to-end.
 2. **DB core** (done) — `packages/db` scaffolded, initial schema via piqued upgrades, verified end-to-end. (`settings` in `packages/common` landed ahead of this phase.)
 3. **Journal core** (done) — entries CRUD (create/list/rename/move date/edit body/delete), master-detail UI (see Client UI above). "Free-text items"/calendar-navigation from the original plan didn't survive the schema simplification — superseded by `entry.body` + the sidebar list.
-4. **Questions** — question bank CRUD, preset groups, "add group to entry" flow (fills in the `QuestionsPanel` placeholder).
+4. **Questions** — prompt bank CRUD, preset groups, "add group to entry" flow (fills in the `PromptsPanel` placeholder).
 5. **Voice** — record/upload/playback, recording UI in ui-common.
 6. **Polish** — error handling, packaging/docs so a friend can clone and run it locally.
 

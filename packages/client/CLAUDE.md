@@ -18,10 +18,10 @@ update: async (id: string, body: UpdateEntryBody): Promise<Entry> => {
 
 ## One component per file
 
-`components/` holds single-responsibility pieces (`EntrySidebar.vue`, `EntryBodyEditor.vue`, `EntryDetail.vue`, `QuestionsPanel.vue`); `pages/HomePage.vue` orchestrates them (owns the `entries` list, selection state, top-level error banner) rather than being one large monolithic page component.
+`components/` holds single-responsibility pieces (`EntrySidebar.vue`, `EntryBodyEditor.vue`, `EntryDetail.vue`, `PromptsPanel.vue`); `pages/HomePage.vue` orchestrates them (owns the `entries` list, selection state, top-level error banner) rather than being one large monolithic page component.
 
 ## Layout: master-detail, not calendar/date-picker
 
-`EntrySidebar` (flat list, `created_at` order, "+ New entry" button) + `EntryDetail` (50/50 split: `EntryBodyEditor` left, `QuestionsPanel` placeholder right, reserved for Phase 4). "New entry" always defaults to today's date; the date itself is editable afterward via a date input in `EntryBodyEditor` (next to the name field), saved via the same full-replace PUT as every other field.
+`EntrySidebar` (flat list, `created_at` order, "+ New entry" button) + `EntryDetail` (50/50 split: `EntryBodyEditor` left, `PromptsPanel` placeholder right, reserved for Phase 4). "New entry" always defaults to today's date; the date itself is editable afterward via a date input in `EntryBodyEditor` (next to the name field), saved via the same full-replace PUT as every other field.
 
 `entry_date` is a civil date string (`"YYYY-MM-DD"`, never a `Date` object) end to end — parse it via explicit `y/m/d` components when formatting for display (`new Date(year, month - 1, day)`), never `new Date(isoString)` directly, which parses date-only strings as UTC midnight and can display a day off in non-UTC-adjacent timezones.

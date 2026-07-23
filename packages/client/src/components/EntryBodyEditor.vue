@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button, Confirm, Icon, TextArea, TextInput } from "@journal/ui-common";
-import { Trash2 } from "lucide-vue-next";
+import { Download, Trash2 } from "lucide-vue-next";
 import { computed } from "vue";
 
 import { api, type Entry } from "../api";
@@ -59,6 +59,14 @@ async function remove() {
         class="entry-date"
         @change="save"
       />
+      <Button
+        as="a"
+        :href="api.entry.exportUrl(entry.id)"
+        download
+        class="export-button"
+      >
+        <Icon :icon="Download" />
+      </Button>
       <Confirm
         title="Delete this entry?"
         message="This can't be undone."
@@ -67,13 +75,12 @@ async function remove() {
       >
         <Button variant="danger" class="delete-button" @click="remove">
           <Icon :icon="Trash2" />
-          Delete
         </Button>
       </Confirm>
     </header>
     <TextArea
       v-model="body"
-      placeholder="Write something..."
+      placeholder="Tell me about your day..."
       class="entry-body"
       @blur="save"
     />
@@ -102,6 +109,7 @@ header {
 .entry-date {
   flex-shrink: 0;
 }
+.export-button,
 .delete-button {
   flex-shrink: 0;
 }

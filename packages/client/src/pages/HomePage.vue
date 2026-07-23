@@ -1,102 +1,32 @@
 <script setup lang="ts">
-import { Alert } from "@journal/ui-common";
-import { computed, onMounted, ref } from "vue";
+import { watch } from "vue";
+import { useRouter } from "vue-router";
 
-import { api, type Entry } from "../api";
-import EntryDetail from "../components/EntryDetail.vue";
-import EntrySidebar from "../components/EntrySidebar.vue";
+import { useEntries } from "../composables/useEntries";
 
-const entries = ref<Entry[]>([]);
-const selectedId = ref<string | null>(null);
-const error = ref<string | null>(null);
+const router = useRouter();
+const { entries, loaded } = useEntries();
 
-async function loadEntries() {
-  error.value = null;
-  try {
-    entries.value = await api.entry.list();
-    if (entries.value.length > 0 && selectedId.value === null) {
-      selectedId.value = entries.value[0]!.id;
-    }
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : String(e);
-  }
-}
-
-onMounted(loadEntries);
-
-// Writable computed so <EntryDetail v-model> can hand back an updated entry
-// (e.g. after a save) and have it land back in the master list.
-const selectedEntry = computed<Entry | null>({
-  get: () => entries.value.find((e) => e.id === selectedId.value) ?? null,
-  set: (updated) => {
-    if (!updated) return;
-    const index = entries.value.findIndex((e) => e.id === updated.id);
-    if (index !== -1) entries.value[index] = updated;
+// Mirrors the old "auto-select the newest entry" behavior, just as a
+// redirect instead of local selection state, now that viewing an entry is
+// route-driven (/entries/:id).
+watch(
+  [entries, loaded],
+  () => {
+    const first = entries.value[0];
+    if (loaded.value && first) router.replace(`/entries/${first.id}`);
   },
-});
-
-function todayIsoDate(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
-}
-
-async function handleCreate() {
-  error.value = null;
-  try {
-    const entry = await api.entry.create({ entry_date: todayIsoDate() });
-    entries.value.unshift(entry);
-    selectedId.value = entry.id;
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : String(e);
-  }
-}
-
-function handleDeleted() {
-  entries.value = entries.value.filter((e) => e.id !== selectedId.value);
-  selectedId.value = entries.value[0]?.id ?? null;
-}
-
-function handleError(message: string) {
-  error.value = message;
-}
+  { immediate: true },
+);
 </script>
 
 <template>
-  <div class="page">
-    <Alert v-if="error">{{ error }}</Alert>
-    <div class="app-shell">
-      <EntrySidebar
-        :entries="entries"
-        :selected-id="selectedId"
-        @select="(id) => (selectedId = id)"
-        @create="handleCreate"
-      />
-      <EntryDetail
-        v-if="selectedEntry"
-        v-model="selectedEntry"
-        @deleted="handleDeleted"
-        @error="handleError"
-      />
-      <div v-else class="empty-state">
-        <p>Select or create an entry.</p>
-      </div>
-    </div>
+  <div class="empty-state">
+    <p>Create an entry to get started.</p>
   </div>
 </template>
 
 <style scoped>
-.page {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-.app-shell {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
 .empty-state {
   flex: 1;
   display: flex;
