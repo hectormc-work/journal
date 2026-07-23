@@ -2,36 +2,42 @@
 
 Personal journaling app — voice recordings, free-form entries, and question prompts. See [PLAN.md](./PLAN.md) for architecture and roadmap.
 
-## Prerequisites
-
-- Node ≥ 22.12 (`.nvmrc` says 24) — Yarn comes via Corepack, nothing global to install
-- Docker Desktop (for Postgres)
-- piqued binary, pinned at **0.7.12**:
-  `curl https://raw.githubusercontent.com/zwade/piqued/refs/heads/master/rust/piqued/scripts/install.sh | bash`
-  (writes to `/usr/local/bin`, needs an interactive `sudo` password — run it yourself, it can't be scripted headlessly)
-
 ## Setup
 
 ```sh
-corepack enable      # once per machine; reads yarn version from package.json
+brew install volta && volta setup   # then open a new terminal
+brew install --cask docker          # then launch it once from Applications
+
+curl https://raw.githubusercontent.com/zwade/piqued/refs/heads/master/rust/piqued/scripts/install.sh | bash
+
 yarn install
-yarn setup            # Postgres up, wait for it, migrate, piqued codegen — see below
-yarn dev              # server on :3000, client on :5173 (proxies /api)
+yarn setup
+yarn dev                            # server :3000, client :5173 (proxies /api)
 ```
 
-`yarn setup` (`scripts/setup.ts`) is just the manual sequence below collapsed
-into one command, with a wait-for-Postgres poll in between (`docker compose
-up -d` returns before Postgres is actually ready to accept connections, so
-running migrations immediately after it can race). It doesn't install Docker
-or the piqued binary themselves — those are one-time, interactive,
-machine-level installs — it fails fast with a pointer back to Prerequisites
-if either is missing:
+_Asides, for when something doesn't work:_
 
-```sh
-yarn db:up            # Postgres 17 in Docker
-yarn db:upgrade       # apply schema migrations (packages/db/upgrades)
-piqued --config piqued.toml   # generate typed query/table files — see packages/db/CLAUDE.md
-```
+- **Volta** — pins Node + Yarn from the `volta` field in `package.json`
+  (currently node 24.18.0 / yarn 4.17.1), auto-activates on `cd`, nothing to
+  run by hand after `volta setup`. No `nvm use`/`corepack enable` needed.
+  If `node --version` doesn't match: something else (old Homebrew `node`,
+  leftover nvm) is winning your `PATH` — check `which node`.
+- **Docker** — `docker info` has to succeed before `yarn setup` will work.
+  Installed ≠ running; Docker Desktop needs to actually be launched once.
+- **piqued** — pinned upstream at **0.7.12**. Writes to `/usr/local/bin`,
+  asks for your `sudo` password interactively — can't be scripted, has to be
+  run by hand, in a real terminal.
+- **`yarn setup`** (`scripts/setup.ts`) — collapses the sequence below into
+  one command, with a wait-for-Postgres poll in between (`docker compose up
+  -d` returns before Postgres actually accepts connections, so migrating
+  right after it can race). Doesn't install Docker or piqued itself — fails
+  fast with a pointer back up to this section if either's missing. Manual
+  equivalent, if you want to run it step by step:
+  ```sh
+  yarn db:up
+  yarn db:upgrade
+  piqued --config piqued.toml
+  ```
 
 ## Workspaces
 
@@ -58,8 +64,18 @@ Internal packages export TypeScript source directly (no build step) — Vite and
 
 ## Config
 
-Copy `.env.example` to `.env` and adjust as needed. All app config is read through a single typed `settings` object (`packages/common/src/settings.ts`) — a zod schema parsed from `process.env` once at startup, so a missing or malformed value fails fast with a clear error instead of surfacing later inside some request handler.
+```sh
+cp .env.example .env   # defaults already work; edit only if you need to change something
+```
+
+_Aside: everything reads through one typed `settings` object
+(`packages/common/src/settings.ts`) parsed once at startup — a bad value
+fails immediately with a clear error instead of surfacing later._
 
 ## Known risk
 
-TypeScript is pinned to the brand-new 6.0 major. If `vue-tsc` throws compiler-internal errors in `.vue` files, downgrade root `typescript` to `^5.9.3` and re-run `yarn install`.
+`vue-tsc` throwing compiler-internal errors in `.vue` files → TS 6 pairing issue:
+
+```sh
+yarn add -D -W typescript@^5.9.3   # then re-run: yarn install
+```
