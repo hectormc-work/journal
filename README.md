@@ -5,7 +5,7 @@ Personal journaling app — voice recordings, free-form entries, and question pr
 ## Prerequisites
 
 - Node ≥ 22.12 (`.nvmrc` says 24) — Yarn comes via Corepack, nothing global to install
-- Docker (for Postgres)
+- Docker Desktop (for Postgres)
 - piqued binary, pinned at **0.7.12**:
   `curl https://raw.githubusercontent.com/zwade/piqued/refs/heads/master/rust/piqued/scripts/install.sh | bash`
   (writes to `/usr/local/bin`, needs an interactive `sudo` password — run it yourself, it can't be scripted headlessly)
@@ -15,10 +15,22 @@ Personal journaling app — voice recordings, free-form entries, and question pr
 ```sh
 corepack enable      # once per machine; reads yarn version from package.json
 yarn install
-yarn db:up           # Postgres 17 in Docker
-yarn db:upgrade      # apply schema migrations (packages/db/upgrades)
+yarn setup            # Postgres up, wait for it, migrate, piqued codegen — see below
+yarn dev              # server on :3000, client on :5173 (proxies /api)
+```
+
+`yarn setup` (`scripts/setup.ts`) is just the manual sequence below collapsed
+into one command, with a wait-for-Postgres poll in between (`docker compose
+up -d` returns before Postgres is actually ready to accept connections, so
+running migrations immediately after it can race). It doesn't install Docker
+or the piqued binary themselves — those are one-time, interactive,
+machine-level installs — it fails fast with a pointer back to Prerequisites
+if either is missing:
+
+```sh
+yarn db:up            # Postgres 17 in Docker
+yarn db:upgrade       # apply schema migrations (packages/db/upgrades)
 piqued --config piqued.toml   # generate typed query/table files — see packages/db/CLAUDE.md
-yarn dev             # server on :3000, client on :5173 (proxies /api)
 ```
 
 ## Workspaces
