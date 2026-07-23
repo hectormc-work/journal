@@ -6,6 +6,10 @@ paths:
 
 Where new knowledge about this codebase goes: `CLAUDE.md`, a rule, or a skill. General markdown style: `markdown-writing.md`, not repeated here.
 
+## Hierarchy: detail increases as scope narrows
+
+`CLAUDE.md` (broadest, orientation) → rules (narrower, path-scoped, prescriptive) → docstrings (narrowest, one symbol). Put detail at the narrowest layer it's relevant to, and reference downward (CLAUDE.md points at the rule; the rule points at a docstring if one exists) rather than restating it up a level.
+
 ## The three kinds of docs
 
 Each one has a different job.
@@ -28,8 +32,9 @@ Each one has a different job.
 
 ## Conventions
 
-- Naming: `<namespace>-<action>`
+- Naming: `<namespace>-<action/sub-object>`
 - Stub files are fine: name plus a one-line description of intended scope, no real content yet, fill in once there's something concrete to say
+- Renaming a skill/rule: grep for the old name first. If it also matches a real binary/package name in actual code, a blanket rename silently breaks that code (happened once: `piqued-migrate`). Re-run the thing, don't just read the diff
 
 ## Careful
 
