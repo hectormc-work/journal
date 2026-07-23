@@ -145,3 +145,25 @@ export namespace PromptResponse {
     };
 }
 
+export namespace Task {
+    export const name = "task";
+    
+    export type t = {
+        "id": string;
+        "text": string;
+        /** NULL = not done, else the day it was done. */
+        "done_date": Date | null;
+        "created_at": Date;
+    };
+    
+    export const spec = {
+        kind: "composite" as const,
+        fields: () => [
+            ["id", String],
+            ["text", String],
+            ["done_date", Date],
+            ["created_at", Date],
+        ] as const,
+    };
+}
+

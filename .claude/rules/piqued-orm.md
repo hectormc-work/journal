@@ -3,7 +3,7 @@ paths:
   - "**/*.ts"
 ---
 
-How to use the piqued ORM/package (`@piqued/client` npm, wrapped by `@journal/db`). Not the binary, see `piqued-sql.md`/`piqued-migrate` skill for that.
+How to use the piqued ORM/package (`@piqued/client` npm, wrapped by `@journal/db`). Not the binary, see `piqued-sql.md`/`piqued-upgrade` skill for that.
 
 ## Query builder
 

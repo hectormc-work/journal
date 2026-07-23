@@ -1,0 +1,3 @@
+version = "task#d5254c"
+isolatedTx = false
+parents = [ "add-entry-name#3937c5" ]
