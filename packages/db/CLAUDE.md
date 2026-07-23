@@ -150,6 +150,14 @@ minority of queries being actively optimized (complex joins/aggregates).
 - `pg.Pool`, configured from `settings.db.*` (`@journal/common/node`).
 - `buildColumnOrderCache(tables, pool)` once at module load, against the
   generated `postgres.ts` namespace (imported as `tables` in `client.ts`).
+  **Gotcha**: this makes importing `@journal/db` connect to Postgres
+  immediately, as a side effect of the import itself — before any of the
+  importer's own code runs. A static top-level `import` races anything that
+  needs to check/wait for Postgres availability first (bit `scripts/setup.ts`
+  when its own wait-for-Postgres loop got raced by this). If sequencing
+  matters, `await import("@journal/db")` dynamically, after confirming
+  readiness some other way (e.g. `pg_isready` — not `@journal/db` itself,
+  chicken-and-egg).
 - `smartClient()` — checks a connection out of the pool, wraps it as
   `new SmartClient(client)`. Primary usage is `using client = await smartClient();`
   at the call site (explicit resource management auto-disposes it) — not the

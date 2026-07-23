@@ -19,7 +19,9 @@ Journal — a personal journaling app for Anahí and a few friends. Voice record
 - `packages/server` — Hono on Node (`@hono/node-server`), exports `AppType` from `src/app.ts` for typed RPC; depends on common (imports `settings` via `@journal/common/node`), db. Conventions + Hono type-inference gotchas: `packages/server/CLAUDE.md`
 - `packages/client` — Vite 8 + Vue 3.5 (Composition API, `<script setup lang="ts">`), vue-router 5, `hc<AppType>` client wrapped by `src/api.ts`. Conventions (component-per-file, the `api.ts` pattern): `packages/client/CLAUDE.md`
 - Internal packages export TS source directly (no build step; Vite/tsx consume it raw). Usually a single `"exports": "./src/index.ts"` — `common` is the one exception, with two entries (see above)
-- Postgres 17 (Docker), piqued (Rust binary pinned 0.7.12, `@piqued/client` npm) for typed SQL, lives in `packages/db`. Migrations are piqued's own DAG-based upgrade system (`PiquedUpgradeControl`, `packages/db/upgrades/`), not a hand-rolled runner. `piqued.toml` (codegen config) lives at the **repo root**, not inside `packages/db`
+- Postgres 17 (Docker), piqued (Rust binary pinned 0.7.12, `@piqued/client` npm) for typed SQL, lives in `packages/db`. `piqued.toml` (codegen config) lives at the **repo root**, not inside `packages/db`
+- Migrations: piqued's own DAG-based upgrade system (`PiquedUpgradeControl`, `packages/db/upgrades/`), not a hand-rolled runner or sequential numbering. Create with `yarn db:new <name>`, apply with `yarn db:upgrade` — full workflow + gotchas in the `piqued-migrate` skill
+- Codegen: `piqued --config piqued.toml` (repo root) regenerates `packages/db/src/{postgres,tables}.ts` from the live schema — **must run after migrating**, never before. Query-writing conventions: `.claude/rules/piqued-sql.md` (hand-written `.sql` files) / `piqued-orm.md` (query builder)
 - TypeScript ^6.0 everywhere; if vue-tsc throws compiler-internal errors in .vue files, suspect the TS 6 pairing (rollback path in README)
 
 ## Conventions
