@@ -135,8 +135,6 @@ async function removePrompt(id: string) {
   overflow-y: auto;
   padding: 1.5rem;
   box-sizing: border-box;
-  background: var(--color-surface);
-  border-left: 1px solid var(--color-border);
 }
 .prompts-panel h2 {
   font-family: var(--font-serif);

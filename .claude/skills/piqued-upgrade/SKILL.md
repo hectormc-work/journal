@@ -1,5 +1,5 @@
 ---
-name: piqued-migrate
+name: piqued-upgrade
 description: Create and apply a piqued DB migration (schema change to packages/db/upgrades), then regenerate typed query files. Use whenever a task needs a new/changed table.
 ---
 

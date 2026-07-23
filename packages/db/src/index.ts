@@ -5,6 +5,7 @@ export {
   PromptResponseTable,
   PromptTable,
   RecordingTable,
+  TaskTable,
 } from "./tables.js";
 
 // Query-builder primitives, re-exported so packages/server only ever needs to

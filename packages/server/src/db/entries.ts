@@ -77,7 +77,7 @@ const toApiEntry = (row: {
   created_at: row.created_at.toISOString(),
 });
 
-const toDbDate = (isoDate: string): Date =>
+export const toDbDate = (isoDate: string): Date =>
   DateTime.fromISO(isoDate, { zone: "utc" }).toJSDate();
 
 const defaultName = (isoDate: string): string =>
@@ -110,8 +110,19 @@ export const getEntryById = async (
   return row ? toApiEntry(row) : undefined;
 };
 
-export const createEntry = async (input: CreateEntry) => {
+// One entry per day (entry_date has a UNIQUE constraint) -- creating on a
+// date that already has one just hands back the existing entry instead of
+// erroring, friendlier than making the caller go find it themselves.
+export const createEntry = async (
+  input: CreateEntry,
+): Promise<{ entry: ReturnType<typeof toApiEntry>; created: boolean }> => {
   using client = await smartClient();
+  const existing = await Select(...EntryTable.star)
+    .from(EntryTable)
+    .where(Op.eq(EntryTable.c.entry_date, toDbDate(input.entry_date)))
+    .opt(client);
+  if (existing) return { entry: toApiEntry(existing), created: false };
+
   const row = await Insert(EntryTable)
     .values({
       entry_date: toDbDate(input.entry_date),
@@ -120,7 +131,7 @@ export const createEntry = async (input: CreateEntry) => {
     })
     .returning(...EntryTable.star)
     .one(client);
-  return toApiEntry(row);
+  return { entry: toApiEntry(row), created: true };
 };
 
 export const updateEntry = async (

@@ -60,7 +60,7 @@ _Asides, for when something doesn't work:_
   run by hand, in a real terminal.
 - **`yarn setup`** (`scripts/setup.ts`) — collapses the sequence below into
   one command, with a wait-for-Postgres poll in between (`docker compose up
-  -d` returns before Postgres actually accepts connections, so migrating
+-d` returns before Postgres actually accepts connections, so migrating
   right after it can race). Doesn't install Docker or piqued itself — fails
   fast with a pointer back up to this section if either's missing. Manual
   equivalent, if you want to run it step by step:

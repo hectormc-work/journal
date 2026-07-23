@@ -5,7 +5,22 @@ paths:
 
 How to write sql piqued code. Binary piqued, not package piqued.
 
-Not migrations, see the `piqued-migrate` skill for those.
+Not migrations, see the `piqued-upgrade` skill for those.
+
+## Comments
+
+`COMMENT ON TABLE`/`COMMENT ON COLUMN` and `--` docs: one short line, not a paragraph.
+
+- A fragment, not a full sentence explaining the rationale
+- If in doubt, cut it shorter, most columns need no comment at all
+
+## Column naming: date vs. timestamp
+
+The suffix is the type, always. Mismatch between the two is how `task.done_at` shipped as a `timestamptz` when it needed to be a `date`.
+
+- `_date` suffix: a `date` column, a calendar day, no time component (e.g. `entry_date`, `done_date`)
+- `_at` suffix: a `timestamptz` column, a specific instant (e.g. `created_at`, `updated_at`)
+- Picking the suffix is picking the type. If it's "which day," it's `_date`. If it's "when exactly," it's `_at`.
 
 ## Hand-written query files
 

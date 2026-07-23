@@ -46,6 +46,11 @@ type UpdatePromptResponseBody = InferRequestType<
   typeof promptResponseById.$patch
 >["json"];
 
+export type Task = InferResponseType<typeof client.tasks.$get>[number];
+type CreateTaskBody = InferRequestType<typeof client.tasks.$post>["json"];
+const taskById = client.tasks[":id"];
+type UpdateTaskBody = InferRequestType<typeof taskById.$patch>["json"];
+
 export const api = {
   entry: {
     list: async (): Promise<Entry[]> => {
@@ -153,6 +158,30 @@ export const api = {
 
     remove: async (id: string): Promise<void> => {
       const res = await promptResponseById.$delete({ param: { id } });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+    },
+  },
+
+  task: {
+    list: async (): Promise<Task[]> => {
+      const res = await client.tasks.$get();
+      return res.json();
+    },
+
+    create: async (body: CreateTaskBody): Promise<Task> => {
+      const res = await client.tasks.$post({ json: body });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      return res.json();
+    },
+
+    update: async (id: string, body: UpdateTaskBody): Promise<Task> => {
+      const res = await taskById.$patch({ param: { id }, json: body });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      return res.json();
+    },
+
+    remove: async (id: string): Promise<void> => {
+      const res = await taskById.$delete({ param: { id } });
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
     },
   },

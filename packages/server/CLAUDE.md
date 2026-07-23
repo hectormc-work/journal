@@ -2,10 +2,11 @@
 
 ## Layout: routes vs data-access
 
-Two-layer split, one per domain:
+Three-layer split, one per domain:
 
 - `src/db/<domain>.ts` (e.g. `db/entries.ts`) — plain functions wrapping `@journal/db`'s query-builder calls (`Select`/`Insert`/`Update`/`Delete`/`Op` against a `TableBuilder`, `using client = await smartClient();` at the call site). Also owns that domain's zod validation schemas (see below) and the row→API shape mapping.
-- `src/app.ts` — the single chained Hono expression (required — `AppType` inference depends on the whole thing being one expression). Route handlers call into the data-access functions and stay focused on HTTP concerns: validation via `zValidator`, status codes, param/query parsing.
+- `src/routers/<domain>.ts` (e.g. `routers/entries.ts`) — that domain's own chained Hono instance, owning its full absolute paths (`/entries`, `/entries/:id`, etc.). Route handlers call into the data-access functions and stay focused on HTTP concerns: validation via `zValidator`, status codes, param/query parsing.
+- `src/app.ts` — composes every router via chained `.route("/", ...)` calls off one base `Hono()` instance. Still has to be a single chained expression end to end (`AppType` inference depends on it), just chained hierarchically across files now instead of flatly in one giant file. Adding a new domain: create its router file, `.route("/", newRouter)` into the chain — don't grow `app.ts` route-by-route.
 
 ## Validation schemas live here, not in `packages/common`
 
